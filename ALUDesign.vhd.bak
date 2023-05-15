@@ -1,0 +1,78 @@
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
+USE IEEE.std_logic_unsigned;
+
+entity ALU is
+	
+	port(
+			
+			-- ALU Inputları 16 bit mi olacak 8 mi dikkat et
+			A						 : in std_logic_vector(7 downto 0); --outputDataRegister 
+			B					    : in std_logic_vector(7 downto 0); --outputAccumulator
+			-- Select Ucunu kontrol et
+			ALU_Select			 : in std_logic_vector(2 downto 0);
+			
+			--output
+			ALU_out_AC			 : out std_logic_vector(7 downto 0);
+			ALU_out_CCR		 	 : out std_logic_vector(7 downto 0);
+	
+	);
+	
+architecture arch of ALU is
+
+signal sum_unsigned : std_logic_vector(8 downto 0); -- cary varmı görmek için
+signal alu_signal : std_logic_vector(7 downto 0); 
+signal add_overflow : std_logic; -- Overflow varmı görmek için toplamada
+signal sub_overflow : std_logic; -- Carry varmı görmek için çıkarmada
+
+begin
+
+process(ALU_Select,outputDataRegister,outputAccumulator)
+begin
+sum_unsigned <= (others =>'0'); -- reset parametre
+
+case ALU_Select is
+	when "000" =>	-- Toplama
+			alu_signal <= A + B;
+			sum_unsigned <= ('0' & A) + ('0' + B);
+			
+		when "001" =>	-- Cikarma
+			alu_signal <= A - B;
+			sum_unsigned <= ('0' & A) - ('0' + B);
+			
+		when "010" => -- Çarpma
+			alu_signal <= A * B;
+         sum_unsigned <= ('0' & A) * ('0' & B);
+		
+		when "011" => -- Bölme
+			 alu_signal <= A / B;
+          sum_unsigned <= ('0' & A) / ('0' & B);
+			
+		when "100" => -- A=B Eşit ise sonuç 1 değilse 0 
+			if A = B then
+                    alu_signal <= "00000001";
+                else
+                    alu_signal <= "00000000";
+                end if;
+			
+		when "101" => -- A<B Küçükse sonuç 1 değilse 0 
+			 if A < B then
+                    alu_signal <= "00000001";
+                else
+                    alu_signal <= "00000000";
+                end if;
+		when "110" => -- A’yı B kadar sola kaydırma - A’nın en son biti Cout’a aktarılır.
+				alu_signal <= std_logic_vector(unsigned(A) sll to_integer(unsigned(B(2 downto 0))));
+            sum_unsigned <= ('0' & A) sll to_integer(unsigned(B(2 downto 0)));
+
+		when "111"  => -- A’yı B kadar sağa kaydırma - A’nın ilk biti Cout’a aktarılır. 
+		when others =>
+		 alu_signal <= (others => '0');
+       sum_unsigned <= (others => '0');
+	end case;
+ 
+end process;
+end architecture;
+
+end ALU;
