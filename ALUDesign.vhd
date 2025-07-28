@@ -22,7 +22,7 @@ architecture arch of ALUDesign is
   signal temp_unsigned: unsigned(15 downto 0);
 begin
 
-  process (ALU_Select, DR, AC, inp, ld, elde) 
+  process (ALU_Select, DR, AC, inp, ld, elde, S5, S4, S3)
   begin
   --Aritmetik İşlemler
     if ld = '1' then
@@ -36,16 +36,13 @@ begin
         sum_unsigned <= unsigned('0' & AC) - unsigned('0' & DR); 
 		  temp_unsigned <= sum_unsigned(15 downto 0);
 		  temp <= std_logic_vector(temp_unsigned);
-		  -- AC' nin aktarımı
-		  elsif ALU_Select = "011" then
-		  	temp <= AC;
-      -- AC + DR
-      elsif ALU_Select = "010" then
-        elde <= (others => '0');
-        for i in 0 to 15 loop
-          elde(i+1) <= (AC(i) and DR(i)) or (elde(i) and (AC(i) xor DR(i)));
-          temp(i) <= AC(i) xor DR(i) xor elde(i);
-        end loop;
+        -- AC + DR
+        elsif ALU_Select = "010" then
+          elde <= (others => '0');
+          for i in 0 to 15 loop
+            elde(i+1) <= (AC(i) and DR(i)) or (elde(i) and (AC(i) xor DR(i)));
+            temp(i) <= AC(i) xor DR(i) xor elde(i);
+          end loop;
       -- DR'yi Aktar
       elsif ALU_Select = "011" then
         temp <= DR;
